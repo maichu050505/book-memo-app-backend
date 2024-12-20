@@ -9,7 +9,7 @@ app.use(cors());
 
 const bookRoute = require("./routes/bookRoute");
 
-app.use("books", bookRoute);
+app.use("/books", bookRoute);
 
 app.listen(3000, () => {
     console.log("実行されました");
