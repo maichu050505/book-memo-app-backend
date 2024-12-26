@@ -7,9 +7,13 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const bookRoute = require("./routes/bookRoute");
+const searchRoute = require("./routes/searchRoute");
+const bookshelfRoute = require("./routes/bookshelfRoute");
+const getBookInfoRoute = require("./routes/getBookInfoRoute");
 
-app.use("/books", bookRoute);
+app.use("/books", searchRoute);
+app.use("/books", bookshelfRoute);
+app.use("/books", getBookInfoRoute);
 
 app.listen(3000, () => {
     console.log("実行されました");
