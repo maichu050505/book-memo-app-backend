@@ -90,7 +90,10 @@ router.delete("/reviews/:bookId", (req, res) => {
 // http://localhost:3000/books/reviews/ で確認するため
 router.get("/reviews", (req, res) => {
   // データベースの内容を返す
-  res.status(200).json({ reviews: review });
+  res.status(200).json({
+    reviews: review, 
+    test: []
+  });
 });
 module.exports = router;
 
