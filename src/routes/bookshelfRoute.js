@@ -1,125 +1,73 @@
 const express = require("express");
 const router = express.Router();
+
+// ボディデータのパース用ミドルウェア
 router.use(express.urlencoded({ extended: true }));
 router.use(express.json()); // JSON形式をパースするために必要
 
 //仮のデータベース
-const books = [
-  {
-    id: 1,
-    title: "モダンJavaScriptの基本から始める React実践の教科書",
-    author: "じゃけぇ（岡田拓巳）",
-    publisher: "SBクリエイティブ",
-    publishedDate: "2021年9月16日",
-    coverImageUrl: "./img/cover1.jpg",
-    amazonLink: "https://amzn.asia/d/cr7hVjL",
-  },
-  {
-    id: 2,
-    title: "いちばんやさしいGit&GitHubの教本 第2版 人気講師が教えるバージョン管理&共有入門",
-    author: "横田紋奈, 宇賀神みずき",
-    publisher: "インプレス",
-    publishedDate: "2022年3月17日",
-    coverImageUrl: "./img/cover2.jpg",
-    amazonLink: "https://amzn.asia/d/eRqAg6g",
-  },
-  {
-    id: 3,
-    title: "SQL 第2版: ゼロからはじめるデータベース操作",
-    author: "ミック",
-    publisher: "翔泳社",
-    publishedDate: "2016年6月1日",
-    coverImageUrl: "./img/cover3.jpg",
-    amazonLink: "https://amzn.asia/d/eRARGG2",
-  },
-  {
-    id: 4,
-    title: "スラスラわかるJavaScript 新版",
-    author: "桜庭洋之, 望月幸太郎",
-    publisher: "翔泳社",
-    publishedDate: "2022年7月13日",
-    coverImageUrl: "./img/cover4.jpg",
-    amazonLink: "https://amzn.asia/d/5HIJwPh",
-  },
-  {
-    id: 5,
-    title: "プロの「引き出し」を増やす　HTML+CSSコーディングの強化書　改訂2版",
-    author: "草野あけみ",
-    publisher: "エムディエヌコーポレーション",
-    publishedDate: "2021年11月29日",
-    coverImageUrl: "./img/cover5.jpg",
-    amazonLink: "https://amzn.asia/d/ag5geAB",
-  },
-  {
-    id: 6,
-    title: "これだけで基本がしっかり身につく HTML/CSS&Webデザイン1冊目の本",
-    author: "Capybara Design, 竹内直人, 竹内瑠美",
-    publisher: "翔泳社",
-    publishedDate: "2021年10月14日",
-    coverImageUrl: "./img/cover6.jpg",
-    amazonLink: "https://amzn.asia/d/0rT6vDF",
-  },
-  {
-    id: 7,
-    title: "【改訂第3版】WordPress 仕事の現場でサッと使える！ デザイン教科書",
-    author: "中島真洋, ロクナナワークショップ",
-    publisher: "技術評論社",
-    publishedDate: "2023年6月23日",
-    coverImageUrl: "./img/cover7.jpg",
-    amazonLink: "https://amzn.asia/d/d5AnGXW",
-  },
-  {
-    id: 8,
-    title: "ジンドゥークリエイター 仕事の現場で使える! カスタマイズとデザイン教科書",
-    author: "服部雄樹, 浅木輝美, 神森勉, KDDIウェブコミュニケーションズ",
-    publisher: "技術評論社",
-    publishedDate: "2020年1月20日",
-    coverImageUrl: "./img/cover8.jpg",
-    amazonLink: "https://amzn.asia/d/8LB3F86",
-  },
-  {
-    id: 9,
-    title: "ほんの一手間で劇的に変わるHTML & CSSとWebデザイン実践講座",
-    author: "Mana",
-    publisher: "SBクリエイティブ",
-    publishedDate: "2021年2月20日",
-    coverImageUrl: "./img/cover9.jpg",
-    amazonLink: "https://amzn.asia/d/3BJ74BZ",
-  },
-  {
-    id: 10,
-    title: "家を買うときに「お金で損したくない人」が読む本",
-    author: "千日太郎",
-    publisher: "日本実業出版社",
-    publishedDate: "2018年1月31日",
-    coverImageUrl: "./img/cover10.jpg",
-    amazonLink: "https://amzn.asia/d/fYCMmEU",
-  },
-];
+const { books, bookshelf } = require("../database");
 
-// 本棚登録用エンドポイント
+// 本棚登録用エンドポイント(POST /bookshelf)
 router.post("/bookshelf", (req, res) => {
-  const { title } = req.body; // クエリパラメータを取得
-  console.log("本棚登録を受け付けました:", title); // リクエスト内容をログに表示
-  if (!title) {
-    return res.status(400).json({ error: "タイトルが指定されていません" });
+  const { id } = req.body;
+  //リクエストの body に id が含まれているか確認。含まれていない場合、ステータスコード 400 (Bad Request) とエラーメッセージを返します。
+  if (!id) {
+    return res.status(400).json({ error: "idが指定されていません" });
   }
 
-  // 本棚登録処理
-  const results = books.filter((book) => {
-    return book.title === title; //完全一致
-  });
+  // あれば、本棚に登録する
+  console.log(books);
+  console.log(bookshelf);
 
-  // 見つからない場合
-  if (results.length === 0) {
-    return res.status(404).send({ message: "指定された本が見つかりませんでした" });
+  // idの書籍データがあるか確認する
+  const target = books.find((book) => book.id == id);
+  // 存在しない場合は 404 (Not Found) を返します。
+  if (!target) {
+    return res.status(404).json({ error: "指定された本が見つかりませんでした。" });
   }
-  
-  // サーバー側で保存処理をシミュレート（データベースで保存する箇所）
-  console.log("本棚に登録されました:", results[0]);
+
+  //重複しないようにすでに本棚に登録されているか確認
+  const isExist = bookshelf.some((book) => book.id == id);
+  //すでに登録済みの場合は「登録しました」と 201 を返します。
+  if (isExist) {
+    console.log("本棚の内容:", bookshelf); // 本棚をログに出力
+    return res.status(201).json({ message: "登録しました" });
+  }
+  //本棚に登録 (重複がない場合のみ)　登録されていない場合は、bookshelf に id を追加し、「登録しました」とレスポンスします。
+  bookshelf.push({ id: target.id });
+  console.log("本棚の内容:", bookshelf); // 本棚をログに出力
+  return res.status(201).json({ message: "登録しました" });
+
   // 結果を返す
-  res.json({ results });
+  //res.json({});
 });
+
+// 本棚から削除するエンドポイント
+router.delete("/bookshelf", (req, res) => {
+  const { id } = req.body;
+  if (!id) {
+    return res.status(400).json({ error: "idが指定されていません" });
+  }
+
+  // 本棚に存在するか確認
+  const index = bookshelf.findIndex((book) => book.id == id);
+  if (index === -1) {
+    return res.status(404).json({ error: "指定された本が本棚にありません。" });
+  }
+
+  // 本棚から削除
+  bookshelf.splice(index, 1);
+  console.log("本棚の内容:", bookshelf);
+  return res.status(200).json({ message: "本棚から削除しました" });
+});
+
+// 本棚の内容を取得するエンドポイント (GET /bookshelf)
+router.get("/bookshelf", (req, res) => {
+  // bookshelf 配列をそのまま返す
+  res.json(bookshelf);
+});
+
 module.exports = router;
 
 

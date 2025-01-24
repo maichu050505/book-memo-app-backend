@@ -1,8 +1,5 @@
-const express = require("express");
-const router = express.Router();
-
 //仮のデータベース
-const books = [
+exports.books = [
   {
     id: 1,
     title: "モダンJavaScriptの基本から始める React実践の教科書",
@@ -95,38 +92,9 @@ const books = [
   },
 ];
 
-// 本の情報取得エンドポイント
-router.get("/getBookInfo", (req, res) => {
-  const { title } = req.query; // クエリパラメータを取得
-  console.log("本の情報取得を受け付けました: ", title); // リクエスト内容をログに表示
-  if (!title) {
-    return res.status(400).json({ error: "タイトルが指定されていません" });
-  }
+exports.bookshelf = [];
 
-  // 本の情報取得処理
-  const results = books.filter((book) => {
-    return book.title === title; //完全一致
-  });
+exports.review = [
+];
 
-  if (!results) {
-    return res.status(404).json({ error: "指定された本が見つかりませんでした" });
-  }
-
-  // 結果を返す
-  res.json({ results });
-});
-module.exports = router;
-
-
-//直接実行のためのコード
-if (require.main === module) {
-  const express = require("express");
-  const app = express();
-
-  app.use("/books", router);
-
-  app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
-  });
-}
-
+exports.memo = [];
