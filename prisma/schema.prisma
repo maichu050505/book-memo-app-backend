@@ -17,5 +17,12 @@ model Book {
   publisher     String   
   publishedDate DateTime 
   coverImageUrl String   
-  amazonLink    String   
+  amazonLink    String
+  bookshelf     Bookshelf?   @relation("BookToBookshelf")
+}
+
+model Bookshelf {
+  id     Int  @id @default(autoincrement())
+  bookId Int  @unique
+  book   Book @relation("BookToBookshelf", fields: [bookId], references: [id])
 }

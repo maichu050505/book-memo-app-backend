@@ -5,18 +5,31 @@ const router = express.Router();
 const { books } = require("../database");
 
 // 書籍検索用エンドポイント
-router.get("/search", (req, res) => {
-  const { query }  = req.query; // クエリパラメータを取得
+router.get("/books/search", (req, res) => {
+  const { query } = req.query; // クエリパラメータを取得
   console.log("検索リクエストを受け付けました:", query); // リクエスト内容をログに表示
   if (!query) {
     return res.status(400).json({ error: "Query parameter is required" });
   }
 
+  // クエリを正規化する関数
+  const normalizeString = (str) =>
+    str
+      .toLowerCase() // 小文字化
+      .replace(/\s+/g, ""); // すべてのスペースを削除
+
+  // クエリを正規化
+  const normalizedQuery = normalizeString(query);
+
   // 検索処理
   const results = books.filter((book) => {
-    return book.title.includes(query) || book.author.includes(query);//部分一致
+    // タイトルと著者名を正規化して比較
+    const normalizedTitle = normalizeString(book.title);
+    const normalizedAuthor = normalizeString(book.author);
+
+    return normalizedTitle.includes(normalizedQuery) || normalizedAuthor.includes(normalizedQuery); //部分一致
     // return book.title === query || book.author === query; //完全一致
-  }); 
+  });
 
   // 見つからない場合
   if (results.length === 0) {

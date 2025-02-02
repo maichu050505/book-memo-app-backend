@@ -5,7 +5,7 @@ const router = express.Router();
 const { books } = require("../database");
 
 // 本の情報取得エンドポイント
-router.get("/getBookInfoById", (req, res) => {
+router.get("/books/getBookInfoById", (req, res) => {
   const { id } = req.query; // クエリパラメータを取得
   if (!id) {
     return res.status(400).json({ error: "IDがありません" });
@@ -13,16 +13,16 @@ router.get("/getBookInfoById", (req, res) => {
 
   // 本の情報取得処理
   const results = books.filter((book) => {
-      return book.id == id; //　===だと型を含めて一致しているかになってしまう。idが文字列で取ってきてしまう。
-      
+    return book.id == id; //　===だと型を含めて一致しているかになってしまう。idが文字列で取ってきてしまう。
   });
 
-  if (!results) {
+  // 本が見つからない場合
+  if (results.length === 0) {
     return res.status(404).json({ error: "指定された本が見つかりませんでした" });
   }
 
   // 結果を返す
-  res.json( results[0] );
+  res.json(results[0]);
 });
 module.exports = router;
 
