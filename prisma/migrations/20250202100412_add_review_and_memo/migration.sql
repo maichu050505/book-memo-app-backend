@@ -1,0 +1,19 @@
+-- CreateTable
+CREATE TABLE "Review" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "bookId" INTEGER NOT NULL,
+    "reviewText" TEXT NOT NULL,
+    "rating" INTEGER NOT NULL,
+    "date" DATETIME NOT NULL,
+    CONSTRAINT "Review_bookId_fkey" FOREIGN KEY ("bookId") REFERENCES "Book" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Memo" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "bookId" INTEGER NOT NULL,
+    "memoText" TEXT NOT NULL,
+    "memoImg" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Memo_bookId_fkey" FOREIGN KEY ("bookId") REFERENCES "Book" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
