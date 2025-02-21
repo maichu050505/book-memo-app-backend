@@ -52,7 +52,7 @@ router.get("/memos/:bookId", async (req, res) => {
 
     const memos = await prisma.memo.findMany({
       where: { bookId: bookIdNumber }, // `bookId` を `Number` に変換
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" }, // 古いメモが上に、新しいメモが下に表示
     });
 
     console.log("取得したメモ:", JSON.stringify(memos, null, 2));
@@ -95,6 +95,7 @@ router.post("/memos/:bookId", upload.array("memoImg", 5), async (req, res) => {
   }
 });
 
+//仮のデータベースを使っていた時の書き方
 // router.post("/memos/:bookId", async (req, res) => {
 //   console.log("リクエストボディ:", JSON.stringify(req.body).length, "bytes");
 //   const { bookId } = req.params;
@@ -102,73 +103,6 @@ router.post("/memos/:bookId", upload.array("memoImg", 5), async (req, res) => {
 
 //   console.log("リクエストボディ:", req.body);
 
-//   try {
-//     const newMemo = await prisma.memo.create({
-//       data: {
-//         bookId: parseInt(bookId, 10),
-//         memoText,
-//         memoImg: memoImgUrls.join("||"), // URL を || で保存
-//       },
-//     });
-
-//     // // `memoImg` を適切に処理する
-//     // if (!memoImg) {
-//     //   memoImg = ""; // 画像なしの場合は空文字を保存
-//     // } else if (Array.isArray(memoImg)) {
-//     //   memoImg = memoImg.join("||"); // `||` をデリミタとして使う
-//     // } else if (typeof memoImg !== "string") {
-//     //   console.error("memoImg の形式が不正です:", memoImg);
-//     //   return res.status(400).json({ error: "memoImg の形式が不正です" });
-//     // }
-
-//     // console.log("保存する memoImg:", memoImg);
-
-//     // const newMemo = await prisma.memo.create({
-//     //   data: {
-//     //     bookId: parseInt(bookId, 10),
-//     //     memoText,
-//     //     memoImg, // `||` 区切りの文字列として保存
-//     //   },
-//     // });
-
-//   // try {
-//   //   const { memoText, memoImg } = req.body;
-//   //   const bookId = parseInt(req.params.bookId, 10);
-//   //   // req.params.bookId の役割
-//   //   // req.params は、ルート（URL）のパラメータ を取得するオブジェクト。
-//   //   // 例えば、POST /memos/6 のようなリクエストが来た場合:
-//   //   // req.params.bookId は "6"（文字列）になる。
-//   //   // parseInt(req.params.bookId, 10) の役割
-//   //   // 文字列 "6" を整数 6 に変換する ための処理。
-//   //   // parseInt( , 10) の 10 は「10進数として変換する」という指定（通常は 10 を使う）。
-//   //   // これにより、bookId は 6（数値型） になる。
-
-//   //   if (!memoText) {
-//   //     return res.status(400).json({ error: "メモのテキストが必要です。" });
-//   //   }
-
-//   //   let formattedMemoImg = "";
-//   //   if (Array.isArray(memoImg)) {
-//   //     formattedMemoImg = memoImg.join(","); // 配列をカンマ区切りの文字列に変換
-//   //   } else if (typeof memoImg === "string") {
-//   //     formattedMemoImg = memoImg; // すでに文字列ならそのまま
-//   //   }
-
-//   //   const newMemo = await prisma.memo.create({
-//   //     data: {
-//   //       bookId,
-//   //       memoText,
-//   //       memoImg: formattedMemoImg, // データベースに保存
-//   //     },
-//   //   });
-
-//     res.status(201).json({ message: "メモが追加されました", memo: newMemo });
-//   } catch (error) {
-//     console.error("メモ追加エラー:", error);
-//     res.status(500).json({ error: "メモの追加に失敗しました" });
-//   }
-
-//     //仮のデータベースを使っていた時の書き方
 //     // 本が存在するか確認
 //     // const bookExists = books.some((b) => b.id.toString() == bookId);
 //     // if (!bookExists) {
@@ -187,67 +121,6 @@ router.post("/memos/:bookId", upload.array("memoImg", 5), async (req, res) => {
 
 //     // // 新しいメモをレスポンスとして返す
 //     // res.status(201).json({ message: "メモが保存されました", memo: newMemo });
-// });
-
-// router.post("/memos/:bookId", async (req, res) => {
-//   console.log("リクエストボディ:", JSON.stringify(req.body).length, "bytes");
-//   const { bookId } = req.params;
-//   let { memoText, memoImg } = req.body;
-
-//   console.log("リクエストボディ:", req.body);
-
-//   // Prismaを使う時の書き方
-//   try {
-//     // `memoImg` を適切に処理する
-//     if (memoImg === undefined || memoImg === null) {
-//       memoImg = ""; // 画像なしの場合は空文字を保存
-//     } else if (Array.isArray(memoImg)) {
-//       memoImg = memoImg.filter(Boolean).join(","); // 空文字や `null` を除外し、カンマ区切りに変換
-//     } else if (typeof memoImg !== "string") {
-//       console.error("memoImg の形式が不正です:", memoImg);
-//       return res.status(400).json({ error: "memoImg の形式が不正です" });
-//     }
-
-//     console.log("保存する memoImg:", memoImg);
-
-//     const newMemo = await prisma.memo.create({
-//       data: {
-//         bookId: parseInt(bookId),
-//         memoText,
-//         memoImg, // ここではカンマ区切りの文字列
-//       },
-//       // data: {
-//       //   bookId: parseInt(bookId),
-//       //   memoText,
-//       //   memoImg: Array.isArray(memoImg) && memoImg.length > 0 ? memoImg : [], //memoImg が 配列であり、かつ空でない場合のみ そのままセット。空の配列 [] なら、そのまま [] を渡す。
-//       // },
-//     });
-
-//     res.status(201).json({ message: "メモが追加されました", memo: newMemo });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "サーバーエラー" });
-//   }
-
-//   // 仮のデータベースを使っていた時の書き方
-//   // 本が存在するか確認
-//   // const bookExists = books.some((b) => b.id.toString() == bookId);
-//   // if (!bookExists) {
-//   //   return res.status(404).json({ error: "指定された本が見つかりません" });
-//   // }
-
-//   // // 新しいメモを追加
-//   // const newMemo = {
-//   //   bookId,
-//   //   memoText,
-//   //   memoImg,
-//   //   memoId: Date.now(), // 一意のIDを生成
-//   // };
-//   // memo.push(newMemo);
-//   // console.log("新しいメモが保存されました:", newMemo);
-
-//   // // 新しいメモをレスポンスとして返す
-//   // res.status(201).json({ message: "メモが保存されました", memo: newMemo });
 // });
 
 // 特定のメモを更新
@@ -311,32 +184,12 @@ router.put("/memos/:id", upload.array("memoImg", 5), async (req, res) => {
   }
 });
 
-
+// 仮のデータベースを使っていた時の書き方
 // router.put("/memos/:memoId", async (req, res) => {
 //   const { memoId } = req.params; // URLパラメータから取得
 //   const { memoText, memoImg } = req.body; // リクエストボディから取得
 //   console.log("PUTリクエストを受信:", { memoText, memoImg, memoId });
 
-//   // Prismaを使う時の書き方
-//   try {
-//     const updatedMemo = await prisma.memo.update({
-//       where: {
-//         id: parseInt(memoId), // `id` を使用
-//       },
-//       // data: { memoText, memoImg },
-//       data: {
-//         memoText,
-//         memoImg: Array.isArray(memoImg) ? memoImg.join(",") : memoImg, // 画像データを文字列に変換
-//       },
-//     });
-
-//     res.status(200).json({ message: "メモが更新されました", memo: updatedMemo });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "サーバーエラー" });
-//   }
-
-//   // 仮のデータベースを使っていた時の書き方
 //   // // 対象のメモを検索
 //   // const memoIndex = memo.findIndex((m) => m.bookId == bookId && m.memoId == memoId);
 //   // if (memoIndex === -1) {
