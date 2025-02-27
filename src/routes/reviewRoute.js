@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // const { books, review } = require("../database");
 
 // 指定された本のレビューを取得
-router.get("/reviews/:bookId", async (req, res) => {
+router.get("/books/reviews/:bookId", async (req, res) => {
   const { bookId } = req.params;
 
   // Prismaを使う時の書き方
@@ -44,7 +44,7 @@ router.get("/reviews/:bookId", async (req, res) => {
 });
 
 // 新しいレビューを追加または既存のレビューを更新
-router.post("/reviews/:bookId", async (req, res) => {
+router.post("/books/reviews/:bookId", async (req, res) => {
   const { bookId } = req.params;
   const { reviewText, rating, date } = req.body;
 
@@ -121,7 +121,7 @@ router.post("/reviews/:bookId", async (req, res) => {
 // });
 
 // レビューを削除するエンドポイント
-router.delete("/reviews/:bookId", async (req, res) => {
+router.delete("/books/reviews/:bookId", async (req, res) => {
   const { bookId } = req.params;
 
   try {
@@ -156,15 +156,14 @@ router.delete("/reviews/:bookId", async (req, res) => {
 });
 
 // http://localhost:3000/books/reviews/ で確認するため
-router.get("/reviews", (req, res) => {
+router.get("/books/reviews", (req, res) => {
   // データベースの内容を返す
   res.status(200).json({
-    reviews: review, 
-    test: []
+    reviews: review,
+    test: [],
   });
 });
 module.exports = router;
-
 
 //直接実行のためのコード
 if (require.main === module) {

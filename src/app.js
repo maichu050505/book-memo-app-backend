@@ -37,7 +37,7 @@ const statusRoute = require("./routes/statusRoute");
 app.use("", searchRoute);
 app.use("", bookshelfRoute);
 app.use("", getBookInfoByIdRoute);
-app.use("/books", reviewRoute);
+app.use("", reviewRoute);
 app.use("", memoRoute);
 app.use("", bookRoute);
 app.use("", statusRoute);
