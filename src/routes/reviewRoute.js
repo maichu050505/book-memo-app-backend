@@ -13,15 +13,15 @@ router.get("/books/reviews/:bookId", async (req, res) => {
 
   // Prismaを使う時の書き方
   try {
-    const reviews = await prisma.review.findMany({
-      where: { bookId: parseInt(bookId) },
+    const review = await prisma.review.findFirst({
+      where: { bookId: Number(bookId) },
     });
 
-    if (!reviews.length) {
+    if (!review) {
       return res.status(200).json({ reviewText: "", rating: 0, date: null });
     }
 
-    res.status(200).json(reviews);
+    res.status(200).json(review);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "サーバーエラー" });
@@ -123,14 +123,6 @@ router.post("/books/reviews/:bookId", async (req, res) => {
 // レビューを削除するエンドポイント
 router.delete("/books/reviews/:bookId", async (req, res) => {
   const { bookId } = req.params;
-
-  try {
-    await prisma.review.deleteMany({ where: { bookId: parseInt(bookId) } });
-    res.status(200).json({ message: "レビューが削除されました" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "サーバーエラー" });
-  }
 
   // Prismaを使う時の書き方
   try {
