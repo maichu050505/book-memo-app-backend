@@ -31,6 +31,7 @@ const getBookInfoByIdRoute = require("./routes/getBookInfoByIdRoute");
 const reviewRoute = require("./routes/reviewRoute");
 const memoRoute = require("./routes/memoRoute.js");
 const bookRoute = require("./routes/booksRoute");
+const statusRoute = require("./routes/statusRoute");
 
 // ルートの設定
 app.use("", searchRoute);
@@ -39,6 +40,7 @@ app.use("", getBookInfoByIdRoute);
 app.use("/books", reviewRoute);
 app.use("", memoRoute);
 app.use("", bookRoute);
+app.use("", statusRoute);
 
 // サーバーの起動
 const PORT = process.env.PORT || 3000;

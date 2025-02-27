@@ -18,6 +18,7 @@ model Book {
   bookshelf     Bookshelf? @relation("BookToBookshelf")
   memos         Memo[]
   reviews       Review[]
+  status        BookStatus  @default(WANT_TO_READ)
 }
 
 model Bookshelf {
@@ -43,4 +44,10 @@ model Memo {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+}
+
+enum BookStatus {
+  WANT_TO_READ
+  READING_NOW
+  READ
 }
