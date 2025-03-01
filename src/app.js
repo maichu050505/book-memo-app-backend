@@ -32,6 +32,8 @@ const reviewRoute = require("./routes/reviewRoute");
 const memoRoute = require("./routes/memoRoute.js");
 const bookRoute = require("./routes/booksRoute");
 const statusRoute = require("./routes/statusRoute");
+const registerRoute = require("./routes/registerRoute");
+const loginRoute = require("./routes/loginRoute");
 
 // ルートの設定
 app.use("", searchRoute);
@@ -41,6 +43,8 @@ app.use("", reviewRoute);
 app.use("", memoRoute);
 app.use("", bookRoute);
 app.use("", statusRoute);
+app.use("", registerRoute);
+app.use("", loginRoute);
 
 // サーバーの起動
 const PORT = process.env.PORT || 3000;

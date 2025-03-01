@@ -7,16 +7,23 @@ const prisma = new PrismaClient();
 // 読書状況の取得エンドポイント
 router.get("/books/:id/status", async (req, res) => {
   const { id } = req.params;
+  const dummyUserId = 1; // 仮のユーザーID
   try {
-    const book = await prisma.book.findUnique({
-      where: { id: Number(id) },
-      select: { status: true },
+    // BooksBookshelf を検索する際、関連する本棚の userId がダミーのユーザーIDであるものを対象にします。
+    const statusRecord = await prisma.booksBookshelf.findFirst({
+      where: {
+        bookId: Number(id),
+        bookshelf: {
+          userId: dummyUserId,
+        },
+      },
     });
-    if (!book) {
-      return res.status(404).json({ error: "本が見つかりません" });
+    if (!statusRecord) {
+      return res.status(404).json({ error: "ステータスが見つかりません" });
     }
-    res.json(book);
+    res.json({ status: statusRecord.status });
   } catch (error) {
+    console.error("ステータス取得エラー:", error);
     res.status(500).json({ error: "ステータス取得に失敗しました" });
   }
 });

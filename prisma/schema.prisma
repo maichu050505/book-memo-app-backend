@@ -15,35 +15,66 @@ model Book {
   publishedDate DateTime
   coverImageUrl String
   amazonLink    String
-  bookshelf     Bookshelf? @relation("BookToBookshelf")
   memos         Memo[]
   reviews       Review[]
-  status        BookStatus  @default(WANT_TO_READ)
+  //1対多の関係　書籍から見ると複数のメモが紐づくけれど、メモから見ると1つの本にしか紐づかない。
+  bookshelves   BooksBookshelf[] // BooksBookshelfとのリレーション
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  username   String    @unique
+  password   String
+  // 1ユーザー1本棚
+  bookshelf  Bookshelf? // 必須になっている状態は、Prisma ではデータベースレベルで強制できないため、optional（?）にする。
+  // ユーザーごとのレビュー・メモ（オプション）
+  reviews    Review[]
+  memos      Memo[]
 }
 
 model Bookshelf {
-  id     Int  @id @default(autoincrement())
-  bookId Int  @unique
-  book   Book @relation("BookToBookshelf", fields: [bookId], references: [id])
+  id      Int    @id @default(autoincrement())
+  userId  Int    @unique
+  user    User   @relation(fields: [userId], references: [id])
+  // 本棚に登録される書籍（中間テーブルとのリレーション）
+  books   BooksBookshelf[]
 }
+// 各本棚は 1 人のユーザーに紐づくので、ユーザーとの一対一の関係にします。ここでは userId に @unique 属性を付け、一意性を保証しています。
+
+// 中間テーブル bookとbookshelf 多対多の関係　本棚から見ても、本から見ても複数紐づく。
+model BooksBookshelf {
+  id           Int        @id @default(autoincrement())
+  bookId       Int
+  bookshelfId  Int
+  status       BookStatus @default(WANT_TO_READ)
+  
+  book         Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  bookshelf    Bookshelf  @relation(fields: [bookshelfId], references: [id], onDelete: Cascade)
+}
+// 書籍は複数のユーザーの本棚に登録できるため、書籍と本棚の多対多の関係を中間テーブルで管理します。ここで、各書籍に対して「読みたい」「今読んでいる」「読み終わった」という状態（BookStatus）も保持します。
+
 
 model Review {
   id         Int      @id @default(autoincrement())
   bookId     Int
+  userId     Int
   reviewText String
   rating     Int
-  date       DateTime
+  date       DateTime @default(now())
   book       Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id]) //外部キー制約
 }
 
 model Memo {
   id        Int      @id @default(autoincrement())
   bookId    Int
+  userId     Int
   memoText  String
   memoImg   String?   @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 enum BookStatus {

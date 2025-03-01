@@ -9,6 +9,22 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+// jsonwebtoken
+// bcrypt
+
+// login API
+// username, passwordでログイン
+// 戻り値としてJWTというトークンをReactに返す
+// Reactでは「localStrage」に保存しておく
+// JWTを使ってそれぞれのAPIを守る。
+// authMiddlewareみたいなミドルウェアをAPIに差し込んでJWTが送られた場合だけ、APIを許可してあげる。
+
+// register API　（ユーザー登録処理）
+// username, passwordで登録する。
+// passwordはUsersテーブルのpasswordフィールドに保存する。
+// passwordはハッシュ化して保存(セキュリティのため、元に戻せない暗号化)
+//
+
 // **`uploads/`ディレクトリを作成**
 const uploadDir = path.resolve(__dirname, "..", "..", "uploads"); // 明示的に `backend/uploads/` に指定
 console.log("Upload directory should be:", uploadDir);
@@ -35,6 +51,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // 指定された本のメモを取得 (すべて)
+// /books/:bookId/memos/
 router.get("/memos/:bookId", async (req, res) => {
   const { bookId } = req.params;
 
@@ -63,8 +80,10 @@ router.get("/memos/:bookId", async (req, res) => {
   }
 });
 
+//　httpプロトコルのメソッドには、get post put（一部更新） deleteがある。
+
 // メモの新規追加
-router.post("/memos/:bookId", upload.array("memoImg", 5), async (req, res) => {
+router.post("/books/:bookId/memos/", upload.array("memoImg", 5), async (req, res) => {
   try {
     const { bookId } = req.params;
     const { memoText } = req.body;

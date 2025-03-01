@@ -132,7 +132,13 @@ router.get("/books/bookshelf", async (req, res) => {
     // Prismaで本棚データを取得
     const bookshelf = await prisma.bookshelf.findMany({
       include: {
-        book: true, // 本の情報を一緒に取得
+        // 必要に応じて user 情報も取得できます
+        // user: true,
+        books: {
+          include: {
+            book: true, // BooksBookshelf モデルの "book" 関係をネストして取得
+          },
+        },
       },
     });
 
@@ -152,7 +158,6 @@ router.get("/books/bookshelf", async (req, res) => {
 
 module.exports = router;
 
-
 //直接実行のためのコード
 // if (require.main === module) {
 //   const express = require("express");
@@ -164,4 +169,3 @@ module.exports = router;
 //     console.log("Server is running on http://localhost:3000");
 //   });
 // }
-
