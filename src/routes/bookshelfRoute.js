@@ -1,7 +1,7 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client"); // Prisma クライアントのインポート
+const authMiddleware = require("../middlewares/authMiddleware");
 const router = express.Router();
-
 const prisma = new PrismaClient();
 
 // ボディデータのパース用ミドルウェア
@@ -12,17 +12,18 @@ router.use(express.json()); // JSON形式をパースするために必要
 // const { books, bookshelf } = require("../database");
 
 // 本棚登録用エンドポイント(POST books/bookshelf)
-router.post("/books/bookshelf", async (req, res) => {
-  const { id } = req.body;
+router.post("/users/:userId/bookshelf", authMiddleware, async (req, res) => {
+  const { userId } = req.params;
+  const { bookId } = req.body;
   //リクエストの body に id が含まれているか確認。含まれていない場合、ステータスコード 400 (Bad Request) とエラーメッセージを返します。
-  if (!id) {
-    return res.status(400).json({ error: "idが指定されていません" });
+  if (!bookId) {
+    return res.status(400).json({ error: "bookIdが指定されていません" });
   }
 
   try {
     // 書籍が存在するか確認
     const book = await prisma.book.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseInt(bookId) },
     });
 
     // 書籍が存在しない場合は404エラーを返す
@@ -31,26 +32,29 @@ router.post("/books/bookshelf", async (req, res) => {
     }
 
     // 本棚に既に登録されているか確認
-    const isExist = await prisma.bookshelf.findUnique({
-      where: { bookId: parseInt(id) },
+    const existingRecord = await prisma.booksBookshelf.findFirst({
+      where: {
+        bookId: Number(bookId),
+        bookshelf: { userId: Number(userId) },
+      },
     });
-
-    // すでに登録済みの場合は「登録しました」と 201 を返す
-    if (isExist) {
-      return res.status(201).json({ message: "登録しました" });
+    if (existingRecord) {
+      return res.status(400).json({ error: "本はすでに登録されています" });
     }
 
-    // 本棚に書籍を登録
-    await prisma.bookshelf.create({
+    // 本棚に書籍を登録（初期の読書状況は "WANT_TO_READ" とする）
+    const newRecord = await prisma.booksBookshelf.create({
       data: {
-        bookId: parseInt(id),
+        bookshelf: { connect: { userId: Number(userId) } },
+        status: "WANT_TO_READ",
+        book: { connect: { id: Number(bookId) } }, // ここで関連する Book レコードとの接続を指定する
       },
     });
 
-    res.status(201).json({ message: "登録しました" });
+    res.status(201).json({ message: "登録しました", record: newRecord });
   } catch (error) {
-    console.error("エラー:", error);
-    res.status(500).json({ error: "サーバーエラーが発生しました。" });
+    console.error("本棚への登録エラー:", error);
+    res.status(500).json({ error: "本棚への登録に失敗しました" });
   }
 
   // 仮のデータベースを使っている時の書き方
@@ -81,27 +85,23 @@ router.post("/books/bookshelf", async (req, res) => {
   //res.json({});
 });
 
-// 本棚から削除するエンドポイント (DELETE /books/bookshelf)
-router.delete("/books/bookshelf", async (req, res) => {
-  const { id, userId } = req.body; // id: 削除したい本のID、userId: 現在のユーザーID
-  if (!id) {
-    return res.status(400).json({ error: "idが指定されていません" });
+// 本棚から削除するエンドポイント (DELETE /users/:userId/bookshelf/:bookId)
+router.delete("/users/:userId/bookshelf/:bookId", authMiddleware, async (req, res) => {
+  const { userId, bookId } = req.params;
+  if (!bookId) {
+    return res.status(400).json({ error: "bookIdが指定されていません" });
   }
 
   try {
-    // ユーザーの本棚レコードを取得
-    const bookshelf = await prisma.bookshelf.findUnique({
-      where: { userId: Number(userId) },
-      include: { books: true },
+    // ユーザーの本棚から対象の書籍登録レコードを探す
+    const record = await prisma.bookshelf.findFirst({
+      where: {
+        bookId: Number(bookId),
+        bookshelf: { userId: Number(userId) },
+      },
     });
-    if (!bookshelf) {
-      return res.status(404).json({ error: "本棚が見つかりません" });
-    }
-
-    // 本棚の中から、対象の本の登録レコードを探す
-    const record = bookshelf.books.find((entry) => entry.bookId === Number(id));
     if (!record) {
-      return res.status(404).json({ error: "本棚に登録されていません" });
+      return res.status(404).json({ error: "本棚に登録されていません。" });
     }
 
     // BooksBookshelf テーブルから該当レコードを削除する
@@ -128,14 +128,11 @@ router.delete("/books/bookshelf", async (req, res) => {
   // return res.status(200).json({ message: "本棚から削除しました" });
 });
 
-// 本棚の内容を取得するエンドポイント (GET books/bookshelf)
-router.get("/books/bookshelf", async (req, res) => {
-  const { userId, filter } = req.query;
+// 本棚の内容を取得するエンドポイント (GET /users/:userId/bookshelf)
+router.get("/users/:userId/bookshelf", async (req, res) => {
+  const { userId } = req.params;
+  const { filter } = req.query; // filter=all, want, now, done
   try {
-    console.log("GET /books/bookshelf リクエストを受信しました");
-    console.log("リクエストヘッダ:", req.headers);
-    console.log("リクエストボディ:", req.body);
-
     // Prismaで本棚データを取得
     // userId に紐づく本棚を取得（中間テーブル経由で書籍情報を含む）
     const bookshelf = await prisma.bookshelf.findUnique({
@@ -163,12 +160,12 @@ router.get("/books/bookshelf", async (req, res) => {
       filteredBooks = bookshelf.books.filter((entry) => entry.status === statusMapping[filter]);
     }
 
-    // 返すデータとして、Book モデルの情報を整形して返す
+    // 返すデータとして、Book モデルの情報を整形して返す。各エントリーの book プロパティのみ返す。
     const books = filteredBooks.map((entry) => entry.book);
     res.json(books);
   } catch (error) {
     console.error("本棚取得エラー:", error);
-    res.status(500).json({ error: "サーバー内部エラーが発生しました。" });
+    res.status(500).json({ error: "本棚の取得に失敗しました" });
   }
 });
 

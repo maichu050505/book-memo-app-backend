@@ -6,14 +6,14 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // 読書状況の取得エンドポイント（authMiddleware を利用）
-router.get("/users/:userId/books/:id/status", authMiddleware, async (req, res) => {
-  const { id } = req.params;
+router.get("/users/:userId/bookshelf/:bookId/status", authMiddleware, async (req, res) => {
+  const { bookId } = req.params;
   // req.user は authMiddleware によってセットされているはず
   const userId = req.user.id;
   try {
     const statusRecord = await prisma.booksBookshelf.findFirst({
       where: {
-        bookId: Number(id),
+        bookId: Number(bookId),
         bookshelf: {
           userId: { equals: Number(userId) },
         },
@@ -31,15 +31,26 @@ router.get("/users/:userId/books/:id/status", authMiddleware, async (req, res) =
 });
 
 // 読書状況の更新エンドポイント
-router.put("/users/:userId/books/:id/status", authMiddleware, async (req, res) => {
-  const { id } = req.params;
+router.put("/users/:userId/bookshelf/:bookId/status", authMiddleware, async (req, res) => {
+  const { bookId } = req.params;
   const { status } = req.body; // "WANT_TO_READ", "READING_NOW", "READ" のいずれかを受け取る
   try {
-    const updatedBook = await prisma.book.update({
-      where: { id: Number(id) },
+    // まず、対象の BooksBookshelf レコードを取得
+    const record = await prisma.booksBookshelf.findFirst({
+      where: {
+        bookId: Number(bookId),
+        bookshelf: { userId: Number(userId) },
+      },
+    });
+    if (!record) {
+      return res.status(404).json({ error: "本棚に登録されていません" });
+    }
+    // そのレコードの status を更新
+    const updatedRecord = await prisma.booksBookshelf.update({
+      where: { id: record.id },
       data: { status },
     });
-    res.json(updatedBook);
+    res.json(updatedRecord);
   } catch (error) {
     res.status(500).json({ error: "ステータスの更新に失敗しました" });
   }
