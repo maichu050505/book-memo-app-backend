@@ -1,25 +1,27 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
+const authMiddleware = require("../middlewares/authMiddleware"); // 適切なパスに変更
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// 読書状況の取得エンドポイント
-router.get("/books/:id/status", async (req, res) => {
+// 読書状況の取得エンドポイント（authMiddleware を利用）
+router.get("/users/:userId/books/:id/status", authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const dummyUserId = 1; // 仮のユーザーID
+  // req.user は authMiddleware によってセットされているはず
+  const userId = req.user.id;
   try {
-    // BooksBookshelf を検索する際、関連する本棚の userId がダミーのユーザーIDであるものを対象にします。
     const statusRecord = await prisma.booksBookshelf.findFirst({
       where: {
         bookId: Number(id),
         bookshelf: {
-          userId: dummyUserId,
+          userId: { equals: Number(userId) },
         },
       },
     });
     if (!statusRecord) {
-      return res.status(404).json({ error: "ステータスが見つかりません" });
+      // 本棚に本が登録されていない、または該当の本が登録されていない場合のデフォルトレスポンス
+      return res.status(200).json({ status: null, message: "本棚に本が登録されていません" });
     }
     res.json({ status: statusRecord.status });
   } catch (error) {
@@ -29,7 +31,7 @@ router.get("/books/:id/status", async (req, res) => {
 });
 
 // 読書状況の更新エンドポイント
-router.put("/books/:id/status", async (req, res) => {
+router.put("/users/:userId/books/:id/status", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body; // "WANT_TO_READ", "READING_NOW", "READ" のいずれかを受け取る
   try {
@@ -45,13 +47,13 @@ router.put("/books/:id/status", async (req, res) => {
 module.exports = router;
 
 //直接実行のためのコード
-if (require.main === module) {
-  const express = require("express");
-  const app = express();
+// if (require.main === module) {
+//   const express = require("express");
+//   const app = express();
 
-  app.use("/books", router);
+//   app.use("/books", router);
 
-  app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
-  });
-}
+//   app.listen(3000, () => {
+//     console.log("Server is running on http://localhost:3000");
+//   });
+// }

@@ -83,30 +83,36 @@ router.post("/books/bookshelf", async (req, res) => {
 
 // 本棚から削除するエンドポイント (DELETE /books/bookshelf)
 router.delete("/books/bookshelf", async (req, res) => {
-  const { id } = req.body;
+  const { id, userId } = req.body; // id: 削除したい本のID、userId: 現在のユーザーID
   if (!id) {
     return res.status(400).json({ error: "idが指定されていません" });
   }
 
   try {
-    // 本棚に存在するか確認
-    const isExist = await prisma.bookshelf.findUnique({
-      where: { bookId: parseInt(id) },
+    // ユーザーの本棚レコードを取得
+    const bookshelf = await prisma.bookshelf.findUnique({
+      where: { userId: Number(userId) },
+      include: { books: true },
     });
-
-    if (!isExist) {
-      return res.status(404).json({ error: "指定された本が本棚にありません。" });
+    if (!bookshelf) {
+      return res.status(404).json({ error: "本棚が見つかりません" });
     }
 
-    // 本棚から削除
-    await prisma.bookshelf.delete({
-      where: { bookId: parseInt(id) },
+    // 本棚の中から、対象の本の登録レコードを探す
+    const record = bookshelf.books.find((entry) => entry.bookId === Number(id));
+    if (!record) {
+      return res.status(404).json({ error: "本棚に登録されていません" });
+    }
+
+    // BooksBookshelf テーブルから該当レコードを削除する
+    await prisma.booksBookshelf.delete({
+      where: { id: record.id },
     });
 
     res.status(200).json({ message: "本棚から削除しました" });
   } catch (error) {
-    console.error("エラー:", error);
-    res.status(500).json({ error: "サーバーエラーが発生しました。" });
+    console.error("削除エラー:", error);
+    res.status(500).json({ error: "本棚からの削除に失敗しました" });
   }
 
   // 仮のデータベースを使っている時の書き方
@@ -124,36 +130,46 @@ router.delete("/books/bookshelf", async (req, res) => {
 
 // 本棚の内容を取得するエンドポイント (GET books/bookshelf)
 router.get("/books/bookshelf", async (req, res) => {
+  const { userId, filter } = req.query;
   try {
     console.log("GET /books/bookshelf リクエストを受信しました");
     console.log("リクエストヘッダ:", req.headers);
     console.log("リクエストボディ:", req.body);
 
     // Prismaで本棚データを取得
-    const bookshelf = await prisma.bookshelf.findMany({
+    // userId に紐づく本棚を取得（中間テーブル経由で書籍情報を含む）
+    const bookshelf = await prisma.bookshelf.findUnique({
+      where: { userId: Number(userId) },
       include: {
-        // 必要に応じて user 情報も取得できます
-        // user: true,
         books: {
-          include: {
-            book: true, // BooksBookshelf モデルの "book" 関係をネストして取得
-          },
+          include: { book: true },
         },
       },
     });
+    if (!bookshelf) {
+      return res.status(404).json({ error: "本棚が見つかりません" });
+    }
 
     console.log("取得した本棚データ:", bookshelf);
 
-    // 本棚が空でも空配列を返す
-    res.status(200).json(bookshelf || []);
+    // filter が "all" 以外の場合は、ステータスで絞り込み
+    let filteredBooks = bookshelf.books;
+    if (filter && filter !== "all") {
+      const statusMapping = {
+        want: "WANT_TO_READ",
+        now: "READING_NOW",
+        done: "READ",
+      };
+      filteredBooks = bookshelf.books.filter((entry) => entry.status === statusMapping[filter]);
+    }
+
+    // 返すデータとして、Book モデルの情報を整形して返す
+    const books = filteredBooks.map((entry) => entry.book);
+    res.json(books);
   } catch (error) {
-    console.error("サーバーエラー:", error.message, error.stack);
+    console.error("本棚取得エラー:", error);
     res.status(500).json({ error: "サーバー内部エラーが発生しました。" });
   }
-
-  // 仮のデータベースを使っている時の書き方
-  // bookshelf 配列をそのまま返す
-  // res.json(bookshelf);
 });
 
 module.exports = router;

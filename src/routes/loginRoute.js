@@ -10,6 +10,11 @@ const prisma = new PrismaClient();
 // JWT のシークレットキー（環境変数から取得するのが望ましい）
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 
+// 開発時のみシークレットキーをログ出力（本番環境では削除または条件分岐する）
+if (process.env.NODE_ENV !== "production") {
+  console.log("loginRoute - JWT_SECRET:", JWT_SECRET);
+}
+
 // ログインエンドポイント
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
@@ -30,6 +35,11 @@ router.post("/login", async (req, res) => {
     const passwordValid = await bcrypt.compare(password, user.password);
     if (!passwordValid) {
       return res.status(401).json({ error: "認証に失敗しました" });
+    }
+
+    // JWT の生成前にシークレットキーを確認
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Generating token with JWT_SECRET:", JWT_SECRET);
     }
 
     // JWT の生成

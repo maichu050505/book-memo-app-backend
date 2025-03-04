@@ -10,7 +10,7 @@ const app = express();
 const corsOptions = {
   origin: "http://localhost:5173", // フロントエンドのURL
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  allowedHeaders: ["Content-Type"],
+  allowedHeaders: ["Content-Type", "Authorization"], // Authorization ヘッダーを許可
   credentials: true,
 };
 app.use(cors(corsOptions));
