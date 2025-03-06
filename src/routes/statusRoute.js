@@ -33,6 +33,7 @@ router.get("/users/:userId/bookshelf/:bookId/status", authMiddleware, async (req
 // 読書状況の更新エンドポイント
 router.put("/users/:userId/bookshelf/:bookId/status", authMiddleware, async (req, res) => {
   const { bookId } = req.params;
+  const userId = req.user.id;
   const { status } = req.body; // "WANT_TO_READ", "READING_NOW", "READ" のいずれかを受け取る
   try {
     // まず、対象の BooksBookshelf レコードを取得
@@ -52,6 +53,7 @@ router.put("/users/:userId/bookshelf/:bookId/status", authMiddleware, async (req
     });
     res.json(updatedRecord);
   } catch (error) {
+    console.error("ステータス更新エラー詳細:", JSON.stringify(error, null, 2));
     res.status(500).json({ error: "ステータスの更新に失敗しました" });
   }
 });

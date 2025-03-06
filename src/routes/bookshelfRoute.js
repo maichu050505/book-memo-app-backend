@@ -93,8 +93,8 @@ router.delete("/users/:userId/bookshelf/:bookId", authMiddleware, async (req, re
   }
 
   try {
-    // ユーザーの本棚から対象の書籍登録レコードを探す
-    const record = await prisma.bookshelf.findFirst({
+    // BooksBookshelf モデルから対象の書籍登録レコードを取得
+    const record = await prisma.booksBookshelf.findFirst({
       where: {
         bookId: Number(bookId),
         bookshelf: { userId: Number(userId) },
@@ -129,13 +129,13 @@ router.delete("/users/:userId/bookshelf/:bookId", authMiddleware, async (req, re
 });
 
 // 本棚の内容を取得するエンドポイント (GET /users/:userId/bookshelf)
-router.get("/users/:userId/bookshelf", async (req, res) => {
+router.get("/users/:userId/bookshelf", authMiddleware, async (req, res) => {
   const { userId } = req.params;
   const { filter } = req.query; // filter=all, want, now, done
   try {
     // Prismaで本棚データを取得
     // userId に紐づく本棚を取得（中間テーブル経由で書籍情報を含む）
-    const bookshelf = await prisma.bookshelf.findUnique({
+    let bookshelf = await prisma.bookshelf.findUnique({
       where: { userId: Number(userId) },
       include: {
         books: {
@@ -143,8 +143,16 @@ router.get("/users/:userId/bookshelf", async (req, res) => {
         },
       },
     });
+    // 本棚レコードが存在しない場合、自動で本棚を作成する
     if (!bookshelf) {
-      return res.status(404).json({ error: "本棚が見つかりません" });
+      bookshelf = await prisma.bookshelf.create({
+        data: {
+          userId: Number(userId),
+        },
+        include: { books: { include: { book: true } } },
+      });
+      // まだ本が登録されていないので、空の配列を返す
+      return res.json([]);
     }
 
     console.log("取得した本棚データ:", bookshelf);
