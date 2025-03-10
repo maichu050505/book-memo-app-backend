@@ -190,6 +190,23 @@ router.put("/users/:userId/bookshelf/:bookId/reviews", authMiddleware, async (re
   }
 });
 
+// 他のユーザーを含めた全レビューを取得するエンドポイント
+router.get("/books/:bookId/reviews", async (req, res) => {
+  const { bookId } = req.params;
+  try {
+    // すべてのレビューを取得する
+    const reviews = await prisma.review.findMany({
+      where: { bookId: Number(bookId) },
+      orderBy: { date: "desc" },
+      include: { user: true }, // 各レビューの投稿者情報も取得可能
+    });
+    res.status(200).json({ reviews });
+  } catch (error) {
+    console.error("他ユーザーのレビュー取得エラー:", error);
+    res.status(500).json({ error: "レビューの取得に失敗しました" });
+  }
+});
+
 // http://localhost:3000/books/reviews/ で確認するため
 router.get("/books/reviews", (req, res) => {
   // データベースの内容を返す
