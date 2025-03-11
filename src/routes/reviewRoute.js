@@ -217,14 +217,20 @@ router.get("/books/reviews", (req, res) => {
 });
 module.exports = router;
 
-//直接実行のためのコード
-if (require.main === module) {
-  const express = require("express");
-  const app = express();
+// 全ての評価（星の数）の平均値を取得するエンドポイント
+router.get("/books/:bookId/reviews/average-rating", async (req, res) => {
+  const { bookId } = req.params;
 
-  app.use("/books", router);
+  try {
+    // 指定した bookId の評価の平均評価を計算
+    const averageRating = await prisma.review.aggregate({
+      where: { bookId: Number(bookId) },
+      _avg: { rating: true },
+    });
 
-  app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
-  });
-}
+    return res.json({ averageRating: averageRating._avg.rating || 3 }); // 3 をデフォルト値
+  } catch (error) {
+    console.error("平均評価の取得エラー:", error);
+    return res.status(500).json({ error: "平均評価の取得に失敗しました" });
+  }
+});
