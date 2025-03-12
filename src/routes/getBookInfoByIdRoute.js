@@ -50,17 +50,3 @@ router.get("/books/getBookInfoById", async (req, res) => {
   // res.json(results[0]);
 });
 module.exports = router;
-
-
-//直接実行のためのコード
-if (require.main === module) {
-  const express = require("express");
-  const app = express();
-
-  app.use("/books", router);
-
-  app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
-  });
-}
-

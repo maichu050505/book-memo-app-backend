@@ -34,6 +34,7 @@ const reviewsCount = require("./routes/reviewsCountRoute.js");
 const statusRoute = require("./routes/statusRoute");
 const registerRoute = require("./routes/registerRoute");
 const loginRoute = require("./routes/loginRoute");
+const getAllBooksRoute = require("./routes/getAllBooksRoute");
 
 // ルートの設定
 app.use("", searchRoute);
@@ -45,6 +46,7 @@ app.use("", reviewsCount);
 app.use("", statusRoute);
 app.use("", registerRoute);
 app.use("", loginRoute);
+app.use("", getAllBooksRoute);
 
 // サーバーの起動
 const PORT = process.env.PORT || 3000;
