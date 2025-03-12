@@ -228,7 +228,7 @@ router.get("/books/:bookId/reviews/average-rating", async (req, res) => {
       _avg: { rating: true },
     });
 
-    return res.json({ averageRating: averageRating._avg.rating || 3 }); // 3 をデフォルト値
+    return res.json({ averageRating: averageRating._avg.rating || 0 }); // 0 をデフォルト値
   } catch (error) {
     console.error("平均評価の取得エラー:", error);
     return res.status(500).json({ error: "平均評価の取得に失敗しました" });
