@@ -78,35 +78,3 @@ router.get("/books/search", async (req, res) => {
   // res.json({ results });
 });
 module.exports = router;
-
-
-//直接実行のためのコード
-if (require.main === module) {
-  const express = require("express");
-  const app = express();
-
-  app.use("/books", router);
-
-  app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
-  });
-}
-
-
-//テスト用
-// const router = express.Router();
-
-// const books = [];
-
-// router.get("/serach", (req, res) => {
-//     const params = req.query;
-
-//     const title = params.title;
-
-//     const result = books.filter((book) => {
-//         return book.title.includes(title);
-//     });
-//     res.json(result);
-// })
-
-// module.exports = router;
