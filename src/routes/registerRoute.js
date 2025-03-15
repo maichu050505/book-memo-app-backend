@@ -5,6 +5,11 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+// register API　（ユーザー登録処理）
+// username, passwordで登録する。
+// passwordはUsersテーブルのpasswordフィールドに保存する。
+// passwordはハッシュ化して保存(セキュリティのため、元に戻せない暗号化)
+
 // 会員登録 エンドポイント
 // POST リクエストで /register エンドポイントに対して、リクエストボディから username、password、passwordConfirm を受け取り、以下の処理を行います。
 // 1, 入力チェック（必須フィールドの確認、パスワード一致の検証）
@@ -12,6 +17,7 @@ const prisma = new PrismaClient();
 // 3, bcrypt を使ってパスワードをハッシュ化
 // 4, 新規ユーザーの作成（Users テーブルに保存）
 // 5, 登録成功時は、ユーザーの基本情報（ID と username）を返す
+
 router.post("/register", async (req, res) => {
   const { username, password, passwordConfirm } = req.body;
 

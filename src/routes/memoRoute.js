@@ -10,22 +10,6 @@ const authMiddleware = require("../middlewares/authMiddleware");
 
 const prisma = new PrismaClient();
 
-// jsonwebtoken
-// bcrypt
-
-// login API
-// username, passwordでログイン
-// 戻り値としてJWTというトークンをReactに返す
-// Reactでは「localStrage」に保存しておく
-// JWTを使ってそれぞれのAPIを守る。
-// authMiddlewareみたいなミドルウェアをAPIに差し込んでJWTが送られた場合だけ、APIを許可してあげる。
-
-// register API　（ユーザー登録処理）
-// username, passwordで登録する。
-// passwordはUsersテーブルのpasswordフィールドに保存する。
-// passwordはハッシュ化して保存(セキュリティのため、元に戻せない暗号化)
-//
-
 // **`uploads/`ディレクトリを作成**
 const uploadDir = path.resolve(__dirname, "..", "..", "uploads"); // 明示的に `backend/uploads/` に指定
 console.log("Upload directory should be:", uploadDir);
@@ -51,7 +35,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// 指定された本(bookId)のメモ一覧を取得 (すべて)
+// 指定されたユーザーの本に紐づくメモ一覧を取得
 // /users/:userId/bookshelf/:bookId/memos
 router.get("/users/:userId/bookshelf/:bookId/memos", authMiddleware, async (req, res) => {
   const { bookId } = req.params;

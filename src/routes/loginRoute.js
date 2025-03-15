@@ -1,3 +1,13 @@
+// jsonwebtoken
+// bcrypt
+
+// login API
+// username, passwordでログイン
+// 戻り値としてJWTというトークンをReactに返す
+// Reactでは「localStrage」に保存しておく
+// JWTを使ってそれぞれのAPIを守る。
+// authMiddlewareみたいなミドルウェアをAPIに差し込んでJWTが送られた場合だけ、APIを許可してあげる。
+
 // routes/loginRoute.js
 const express = require("express");
 const router = express.Router();
