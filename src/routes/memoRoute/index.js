@@ -1,9 +1,10 @@
 const express = require("express");
 
-const { router: getMemosOfBookRoute } = require("./getMemosOfBook");
-const { router: createMemoRoute } = require("./createMemo");
-const { router: updateMemoRoute } = require("./updateMemo");
-const { router: deleteMemoRoute } = require("./deleteMemo");
+const getMemosOfBookRoute = require("./getMemosOfBook");
+const createMemoRoute = require("./createMemo");
+const updateMemoRoute = require("./updateMemo");
+const deleteMemoRoute = require("./deleteMemo");
+const getUserMemoRoute = require("./getUserMemos");
 
 const router = express.Router();
 
@@ -12,5 +13,6 @@ router.use(getMemosOfBookRoute);
 router.use(createMemoRoute);
 router.use(updateMemoRoute);
 router.use(deleteMemoRoute);
+router.use(getUserMemoRoute);
 
 module.exports = router;

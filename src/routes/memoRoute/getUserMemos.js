@@ -1,5 +1,7 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
+const authMiddleware = require("../../middlewares/authMiddleware");
+
 const router = express.Router();
 const prisma = new PrismaClient();
 
@@ -30,4 +32,4 @@ router.get("/users/:userId/bookshelf/:bookId/memos", authMiddleware, async (req,
   }
 });
 
-module.exports = { router };
+module.exports = router;

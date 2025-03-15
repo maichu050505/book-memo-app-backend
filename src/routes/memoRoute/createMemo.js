@@ -1,37 +1,10 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
 const authMiddleware = require("../../middlewares/authMiddleware");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { upload } = require("./uploadConfig");
 
 const router = express.Router();
 const prisma = new PrismaClient();
-
-// **`uploads/`ディレクトリを作成**
-const uploadDir = path.resolve(__dirname, "..", "..", "uploads"); // 明示的に `backend/uploads/` に指定
-console.log("Upload directory should be:", uploadDir);
-
-if (!fs.existsSync(uploadDir)) {
-  console.log("Creating upload directory:", uploadDir);
-  fs.mkdirSync(uploadDir, { recursive: true });
-} else {
-  console.log("Upload directory already exists:", uploadDir);
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    console.log("Multer saving file to:", uploadDir); // ここで `src/uploads/` になっていないか確認！
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const safeFilename = `${Date.now()}.${file.originalname.split(".").pop()}`;
-    console.log("Generated filename:", safeFilename);
-    cb(null, safeFilename);
-  },
-});
-
-const upload = multer({ storage });
 
 // メモの新規追加
 router.post(
@@ -101,4 +74,4 @@ router.post(
 //     // res.status(201).json({ message: "メモが保存されました", memo: newMemo });
 // });
 
-module.exports = { router };
+module.exports = router;

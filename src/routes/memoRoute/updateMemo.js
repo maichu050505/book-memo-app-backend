@@ -1,23 +1,12 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
 const authMiddleware = require("../../middlewares/authMiddleware");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { upload } = require("./uploadConfig");
 
 const router = express.Router();
 const prisma = new PrismaClient();
-
-// アップロード設定
-const uploadDir = path.resolve(__dirname, "..", "..", "uploads");
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const safeFilename = `${Date.now()}.${file.originalname.split(".").pop()}`;
-    cb(null, safeFilename);
-  },
-});
-const upload = multer({ storage });
+const path = require("path");
+const fs = require("fs");
 
 // 特定のメモを更新
 router.put(
@@ -105,4 +94,4 @@ router.put(
 //   // res.status(200).json({ message: "メモが更新されました", memo: memo[memoIndex] });
 // });
 
-module.exports = { router };
+module.exports = router;

@@ -43,4 +43,4 @@ router.delete("/users/:userId/bookshelf/:bookId/memos/:id", authMiddleware, asyn
   }
 });
 
-module.exports = { router };
+module.exports = router;
