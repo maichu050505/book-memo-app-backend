@@ -26,7 +26,7 @@ app.use("/uploads", express.static(path.resolve(__dirname, "../uploads"))); // `
 
 // ルートのインポート
 const searchRoute = require("./routes/searchRoute");
-const bookshelfRoute = require("./routes/bookshelfRoute");
+const bookshelfRoutes = require("./routes/bookshelfRoute");
 const getBookInfoByIdRoute = require("./routes/getBookInfoByIdRoute");
 const reviewRoutes = require("./routes/reviewRoute");
 const memoRoutes = require("./routes/memoRoute");
@@ -37,7 +37,7 @@ const getAllBooksRoute = require("./routes/getAllBooksRoute");
 
 // ルートの設定
 app.use("", searchRoute);
-app.use("", bookshelfRoute);
+app.use("", bookshelfRoutes);
 app.use("", getBookInfoByIdRoute);
 app.use("", reviewRoutes);
 app.use("", memoRoutes);
