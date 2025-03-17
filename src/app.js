@@ -8,7 +8,7 @@ const app = express();
 
 // CORS 設定
 const corsOptions = {
-  origin: "http://localhost:5173", // フロントエンドのURL
+  origin: process.env.CORS_URL, // フロントエンドのURL
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   allowedHeaders: ["Content-Type", "Authorization"], // Authorization ヘッダーを許可
   credentials: true,
