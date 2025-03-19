@@ -51,3 +51,8 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`サーバーがポート ${PORT} で実行されました`);
 });
+
+// すべての GET リクエストに対して index.html を返す
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "../index.html"));
+});
