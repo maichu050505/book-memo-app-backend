@@ -3,7 +3,13 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {
-  // 例として、2件の書籍データを登録する
+  // 既に書籍データが存在するかチェックする
+  const existingBooks = await prisma.book.findMany();
+  if (existingBooks.length > 0) {
+    console.log("既に書籍データが存在するため、Seed をスキップします。");
+    return;
+  }
+  // 10件の書籍データを登録する
   const book1 = await prisma.book.create({
     data: {
       title: "モダンJavaScriptの基本から始める React実践の教科書",
