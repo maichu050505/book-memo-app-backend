@@ -1,3 +1,6 @@
+require("dotenv").config();
+console.log("DATABASE_URL:", process.env.DATABASE_URL);
+
 const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
@@ -7,10 +10,19 @@ const prisma = new PrismaClient();
 const app = express();
 
 // CORS 設定
+const whitelist = ["http://localhost:5173", "https://book-memo-app-front.vercel.app"];
+
 const corsOptions = {
-  origin: process.env.CORS_URL, // フロントエンドのURL
+  origin: function (origin, callback) {
+    // オリジンがない場合（同一オリジンリクエストなど）は許可する
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  allowedHeaders: ["Content-Type", "Authorization"], // Authorization ヘッダーを許可
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
 app.use(cors(corsOptions));
