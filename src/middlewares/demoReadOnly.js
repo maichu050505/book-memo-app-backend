@@ -8,6 +8,9 @@ const prisma = new PrismaClient();
  */
 module.exports = async function demoReadOnly(req, res, next) {
   try {
+    // 環境変数が false なら何もしない
+    if (process.env.DEMO_READONLY === "false") return next();
+
     const isWrite = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);
     if (process.env.NODE_ENV !== "production" || !isWrite) return next();
 
