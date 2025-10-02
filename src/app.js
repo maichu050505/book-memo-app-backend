@@ -80,3 +80,16 @@ if (process.env.NODE_ENV !== "production") {
     res.sendFile(path.resolve(__dirname, "../index.html"));
   });
 }
+
+app.use((err, req, res, next) => {
+  // Multerのファイルサイズ超過など
+  if (err && err.name === "MulterError") {
+    // 例: 'LIMIT_FILE_SIZE', 'LIMIT_FILE_COUNT'
+    const status = err.code === "LIMIT_FILE_SIZE" ? 413 : 400;
+    return res.status(status).json({ error: err.message });
+  }
+  if (err && /画像ファイルのみアップロード可能/.test(err.message)) {
+    return res.status(400).json({ error: err.message });
+  }
+  next(err);
+});

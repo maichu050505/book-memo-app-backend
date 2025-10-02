@@ -1,9 +1,11 @@
-// uploadConfig.js
 const multer = require("multer");
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MBなど適宜
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB/枚
+  },
+
   fileFilter: (req, file, cb) => {
     const ok = /image\/(jpeg|png|webp|heic|heif)/i.test(file.mimetype);
     cb(ok ? null : new Error("画像ファイルのみアップロード可能です"), ok);

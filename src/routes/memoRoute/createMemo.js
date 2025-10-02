@@ -39,10 +39,6 @@ router.post(
         return res.status(403).json({ error: "Forbidden: userId mismatch" });
       }
 
-      const { bookId } = req.params;
-      const userId = req.user.id;
-      const { memoText } = req.body;
-
       const urls = [];
 
       for (const file of req.files || []) {
@@ -70,6 +66,28 @@ router.post(
         const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(pathInBucket);
 
         urls.push(pub.publicUrl); // ← 公開URLをDBへ
+      }
+
+      // デモアカウントだけ、メモは最大50件、超えたら古いの自動削除
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { isDemo: true },
+      });
+
+      if (user?.isDemo) {
+        const MAX = 50; // デモ上限
+        const count = await prisma.memo.count({ where: { userId } });
+        if (count >= MAX) {
+          // 一番古いのから消す
+          const oldest = await prisma.memo.findFirst({
+            where: { userId },
+            orderBy: { createdAt: "asc" },
+            select: { id: true },
+          });
+          if (oldest) {
+            await prisma.memo.delete({ where: { id: oldest.id } });
+          }
+        }
       }
 
       const newMemo = await prisma.memo.create({
