@@ -1,6 +1,7 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
 const authMiddleware = require("../../middlewares/authMiddleware");
+const demoReadOnly = require("../../middlewares/demoReadOnly");
 const { upload } = require("./uploadConfig");
 
 const router = express.Router();
@@ -10,6 +11,7 @@ const prisma = new PrismaClient();
 router.post(
   "/users/:userId/bookshelf/:bookId/memos",
   authMiddleware,
+  demoReadOnly,
   upload.array("memoImg", 5),
   async (req, res) => {
     const { bookId } = req.params;

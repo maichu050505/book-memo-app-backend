@@ -1,6 +1,7 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
 const authMiddleware = require("../../middlewares/authMiddleware");
+const demoReadOnly = require("../../middlewares/demoReadOnly");
 const { upload } = require("./uploadConfig");
 
 const router = express.Router();
@@ -12,6 +13,7 @@ const fs = require("fs");
 router.put(
   "/users/:userId/bookshelf/:bookId/memos/:id",
   authMiddleware,
+  demoReadOnly,
   upload.array("memoImg", 5),
   async (req, res) => {
     try {
