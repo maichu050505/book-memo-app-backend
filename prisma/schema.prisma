@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" // 開発する時はsqliteに変更 本番では、postgresql
-  url      = env("DATABASE_URL")
+  provider  = "postgresql" // 開発する時はsqliteに変更 本番では、postgresql
+  url       = env("DATABASE_URL")   // Pooler (6543) → 本番・ランタイム用
+  directUrl = env("DIRECT_URL")     // Direct (5432) → migrate / db push 用
 }
 
 model Book {

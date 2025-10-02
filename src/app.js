@@ -64,7 +64,9 @@ app.listen(PORT, () => {
   console.log(`サーバーがポート ${PORT} で実行されました`);
 });
 
-// すべての GET リクエストに対して index.html を返す
-app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "../index.html"));
-});
+// すべての GET リクエストに対して index.html を返す（開発時のみ）
+if (process.env.NODE_ENV !== "production") {
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../index.html"));
+  });
+}
