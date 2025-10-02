@@ -9,6 +9,16 @@ const path = require("path");
 const prisma = new PrismaClient();
 const app = express();
 
+// 健康チェック（Render の Health Check 用）
+app.get("/health", (req, res) => {
+  res.status(200).json({ ok: true, time: new Date().toISOString() });
+});
+
+// （任意）ルートアクセスも 200 を返す
+app.get("/", (req, res) => {
+  res.status(200).send("OK");
+});
+
 // CORS 設定
 const whitelist = ["http://localhost:5173", "https://book-memo-app-front.vercel.app"];
 
