@@ -9,39 +9,22 @@ const path = require("path");
 const prisma = new PrismaClient();
 const app = express();
 
-// 健康チェック（Render の Health Check 用）
-app.get("/health", (req, res) => {
-  res.status(200).json({ ok: true, time: new Date().toISOString() });
-});
-
-// （任意）ルートアクセスも 200 を返す
-app.get("/", (req, res) => {
-  res.status(200).send("OK");
-});
-
 // CORS 設定
-const allowedOriginPatterns = [
-  /^http:\/\/localhost:5173$/,
-  /^http:\/\/127\.0\.0\.1:5173$/,
-  /^https:\/\/book-memo-app-front\.vercel\.app$/, // 本番
-  /^https:\/\/book-memo-app-front-[a-z0-9-]+\.vercel\.app$/, // 自プロジェクトのプレビュー
-];
-
-const extraOrigins = (process.env.CORS_ORIGINS || "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+const whitelist = ["http://localhost:5173", "https://book-memo-app-front.vercel.app"];
 
 const corsOptions = {
-  origin(origin, cb) {
-    if (!origin) return cb(null, true); // 同一オリジン/ヘルスチェック等
-    if (extraOrigins.includes(origin)) return cb(null, true);
-    if (allowedOriginPatterns.some((re) => re.test(origin))) return cb(null, true);
-    return cb(new Error("Not allowed by CORS"));
+  origin: function (origin, callback) {
+    // オリジンがない場合（同一オリジンリクエストなど）は許可する
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
   },
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
-
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
@@ -87,16 +70,3 @@ if (process.env.NODE_ENV !== "production") {
     res.sendFile(path.resolve(__dirname, "../index.html"));
   });
 }
-
-app.use((err, req, res, next) => {
-  // Multerのファイルサイズ超過など
-  if (err && err.name === "MulterError") {
-    // 例: 'LIMIT_FILE_SIZE', 'LIMIT_FILE_COUNT'
-    const status = err.code === "LIMIT_FILE_SIZE" ? 413 : 400;
-    return res.status(status).json({ error: err.message });
-  }
-  if (err && /画像ファイルのみアップロード可能/.test(err.message)) {
-    return res.status(400).json({ error: err.message });
-  }
-  next(err);
-});

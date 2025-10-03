@@ -31,7 +31,6 @@ model User {
   // ユーザーごとのレビュー・メモ（オプション）
   reviews    Review[]
   memos      Memo[]
-  isDemo     Boolean   @default(false)
 }
 
 model Bookshelf {

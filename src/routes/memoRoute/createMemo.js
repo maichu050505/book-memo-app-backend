@@ -1,102 +1,44 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
 const authMiddleware = require("../../middlewares/authMiddleware");
-const demoReadOnly = require("../../middlewares/demoReadOnly");
 const { upload } = require("./uploadConfig");
-const sharp = require("sharp");
-const { createClient } = require("@supabase/supabase-js");
 
 const router = express.Router();
 const prisma = new PrismaClient();
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-const BUCKET = process.env.SUPABASE_PUBLIC_BUCKET || "memo-images";
-
-function toSafeJpegName(originalName = "image") {
-  const base = originalName.replace(/\.[^.]+$/, "");
-  const slug =
-    base
-      .toLowerCase()
-      .replace(/[^a-z0-9-_]+/g, "-")
-      .slice(0, 50) || "img";
-  return `${Date.now()}-${slug}.jpg`;
-}
 
 // メモの新規追加
 router.post(
   "/users/:userId/bookshelf/:bookId/memos",
   authMiddleware,
-  demoReadOnly,
-  upload.array("memoImg", 10),
+  upload.array("memoImg", 5),
   async (req, res) => {
     const { bookId } = req.params;
     const userId = req.user.id;
     const { memoText } = req.body;
     try {
-      // 他人の userId での操作を禁止
-      const paramUserId = Number(req.params.userId);
-      if (Number.isFinite(paramUserId) && paramUserId !== req.user.id) {
-        return res.status(403).json({ error: "Forbidden: userId mismatch" });
+      console.log(`メモ作成リクエスト: bookId=${bookId}, memoText=${memoText}`);
+      console.log(`アップロードされたファイル:`, req.files);
+
+      let memoImg = [];
+      if (req.files && req.files.length > 0) {
+        memoImg = req.files.map((file) => `/uploads/${file.filename}`);
       }
 
-      // サーバでも枚数制限
-      if (req.files && req.files.length > 10) {
-        return res.status(400).json({ error: "画像は最大10枚までです" });
-      }
-
-      const urls = [];
-      for (const file of req.files || []) {
-        // すべてJPEGに寄せる（HEIC/HEIFは必ず変換）
-        const buf = await sharp(file.buffer).jpeg({ quality: 85 }).toBuffer();
-        const filename = toSafeJpegName(file.originalname);
-        const pathInBucket = `users/${userId}/${filename}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from(BUCKET)
-          .upload(pathInBucket, buf, {
-            contentType: "image/jpeg",
-            upsert: false,
-          });
-        if (uploadError) {
-          console.error("Storage upload error:", uploadError);
-          return res.status(500).json({ error: "画像の保存に失敗しました" });
-        }
-
-        const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(pathInBucket);
-        urls.push(pub.publicUrl); // ← 公開URLをDBへ
-      }
-
-      // デモアカウントだけ、メモは最大50件、超えたら古いの自動削除
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { isDemo: true },
-      });
-      if (user?.isDemo) {
-        const MAX = 50; // デモ上限
-        const count = await prisma.memo.count({ where: { userId } });
-        if (count >= MAX) {
-          // 一番古いのから消す
-          const oldest = await prisma.memo.findFirst({
-            where: { userId },
-            orderBy: { createdAt: "asc" },
-            select: { id: true },
-          });
-          if (oldest) {
-            await prisma.memo.delete({ where: { id: oldest.id } });
-          }
-        }
-      }
+      console.log("保存する画像のパス:", memoImg);
 
       const newMemo = await prisma.memo.create({
         data: {
           memoText,
-          memoImg: urls.length ? urls.join("||") : "",
+          memoImg: memoImg.length > 0 ? memoImg.join("||") : "",
+          // ネストしたリレーションで書籍を接続
           book: { connect: { id: Number(bookId) } },
+          // ユーザーとのリレーション接続
           user: { connect: { id: Number(userId) } },
         },
       });
 
-      return res.status(201).json({ memo: newMemo });
+      console.log("新規作成されたメモ:", newMemo);
+      res.status(201).json({ memo: newMemo });
     } catch (error) {
       console.error("メモ作成エラー:", error);
       res.status(500).json({ error: "メモの作成に失敗しました" });

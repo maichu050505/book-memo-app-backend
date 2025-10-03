@@ -36,10 +36,7 @@ router.post("/login", async (req, res) => {
 
   try {
     // ユーザーを検索
-    const user = await prisma.user.findUnique({
-      where: { username },
-      select: { id: true, username: true, password: true, isDemo: true },
-    });
+    const user = await prisma.user.findUnique({ where: { username } });
     if (!user) {
       return res.status(401).json({ error: "認証に失敗しました" });
     }
@@ -50,20 +47,19 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "認証に失敗しました" });
     }
 
-    // ★ JWT の生成 isDemo を含める
+    // JWT の生成前にシークレットキーを確認
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Generating token with JWT_SECRET:", JWT_SECRET);
+    }
+
+    // JWT の生成
     // ペイロードには必要に応じたユーザー情報を含める（ここでは user.id と username）
-    const payload = { id: user.id, username: user.username, isDemo: !!user.isDemo };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
     // JWT を返す
-    return res.json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        isDemo: !!user.isDemo,
-      },
-    });
+    res.json({ token });
   } catch (error) {
     console.error("ログインエラー:", error);
     res.status(500).json({ error: "サーバー内部エラーが発生しました" });
