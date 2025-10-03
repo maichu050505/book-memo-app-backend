@@ -27,9 +27,6 @@ router.post(
   authMiddleware,
   upload.array("memoImg", 5),
   async (req, res) => {
-    const { bookId } = req.params;
-    const userId = req.user.id;
-    const { memoText } = req.body;
     try {
       // 他人の userId での操作を禁止
       const paramUserId = Number(req.params.userId);
