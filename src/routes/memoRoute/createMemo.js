@@ -27,7 +27,7 @@ router.post(
   "/users/:userId/bookshelf/:bookId/memos",
   authMiddleware,
   demoReadOnly,
-  upload.array("memoImg", 5),
+  upload.array("memoImg", 10),
   async (req, res) => {
     const { bookId } = req.params;
     const userId = req.user.id;
@@ -39,15 +39,15 @@ router.post(
         return res.status(403).json({ error: "Forbidden: userId mismatch" });
       }
 
+      // サーバでも枚数制限
+      if (req.files && req.files.length > 10) {
+        return res.status(400).json({ error: "画像は最大10枚までです" });
+      }
+
       const urls = [];
-
       for (const file of req.files || []) {
-        const isHeic =
-          /heic|heif/i.test(file.mimetype) || /\.heic$|\.heif$/i.test(file.originalname);
-
         // すべてJPEGに寄せる（HEIC/HEIFは必ず変換）
         const buf = await sharp(file.buffer).jpeg({ quality: 85 }).toBuffer();
-
         const filename = toSafeJpegName(file.originalname);
         const pathInBucket = `users/${userId}/${filename}`;
 
@@ -57,14 +57,12 @@ router.post(
             contentType: "image/jpeg",
             upsert: false,
           });
-
         if (uploadError) {
           console.error("Storage upload error:", uploadError);
           return res.status(500).json({ error: "画像の保存に失敗しました" });
         }
 
         const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(pathInBucket);
-
         urls.push(pub.publicUrl); // ← 公開URLをDBへ
       }
 
@@ -73,7 +71,6 @@ router.post(
         where: { id: userId },
         select: { isDemo: true },
       });
-
       if (user?.isDemo) {
         const MAX = 50; // デモ上限
         const count = await prisma.memo.count({ where: { userId } });
