@@ -1,11 +1,30 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
 const authMiddleware = require("../../middlewares/authMiddleware");
+const { createClient } = require("@supabase/supabase-js");
 const path = require("path");
 const fs = require("fs");
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const BUCKET = process.env.SUPABASE_PUBLIC_BUCKET || "memo-images";
+
+/** 公開URLから Storage のパスを取り出す */
+function publicUrlToStoragePath(publicUrl) {
+  // 例: https://<proj>.supabase.co/storage/v1/object/public/memo-images/users/123/1690000-img.jpg
+  // → memo-images/users/123/1690000-img.jpg
+  try {
+    const u = new URL(publicUrl);
+    const idx = u.pathname.indexOf("/storage/v1/object/public/");
+    if (idx === -1) return null;
+    const after = u.pathname.slice(idx + "/storage/v1/object/public/".length);
+    return decodeURIComponent(after.startsWith("/") ? after.slice(1) : after);
+  } catch {
+    return null;
+  }
+}
 
 // 特定のメモを削除
 router.delete("/users/:userId/bookshelf/:bookId/memos/:id", authMiddleware, async (req, res) => {
@@ -20,16 +39,22 @@ router.delete("/users/:userId/bookshelf/:bookId/memos/:id", authMiddleware, asyn
       return res.status(404).json({ error: "メモが見つかりません" });
     }
 
-    // 画像がある場合、サーバーから削除
+    // 画像の削除（Storage）
     if (existingMemo.memoImg) {
-      const imagePaths = existingMemo.memoImg.split("||"); // `||` で複数画像を分割
-      imagePaths.forEach((imgPath) => {
-        const filePath = path.join(__dirname, "..", imgPath);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-          console.log(`画像削除: ${filePath}`);
-        }
-      });
+      const urls = existingMemo.memoImg.split("||").filter(Boolean);
+
+      // Supabase Storage のパスに変換（外部URLはスキップ）
+      const pathsToRemove = urls
+        .map((url) => publicUrlToStoragePath(url))
+        .filter(Boolean)
+        .map((p) => (p.startsWith(`${BUCKET}/`) ? p : `${BUCKET}/${p}`));
+
+      // if (pathsToRemove.length) {
+      //   const { error: removeErr } = await supabase.storage.remove(pathsToRemove);
+      //   if (removeErr) {
+      //     console.error("Storage remove error:", removeErr);
+      //   }
+      // }
     }
 
     // メモ削除
