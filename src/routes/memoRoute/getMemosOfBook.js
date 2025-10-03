@@ -22,16 +22,18 @@ router.get("/books/:bookId/memos", async (req, res) => {
   try {
     const memos = await prisma.memo.findMany({
       where: { bookId: Number(bookId) },
-      orderBy: { id: "desc" },
+      orderBy: { createdAt: "desc" },
     });
-
-    const shaped = memos.map((m) => {
-      const parts = m.memoImg ? m.memoImg.split("||").filter(Boolean) : [];
-      const imageUrls = parts.map((p) => toAbsolute(p)).filter(Boolean);
-      return { ...m, imageUrls }; // ← フロントはこれを使う
-    });
-
-    return res.json(shaped);
+    const normalized = memos.map((m) => ({
+      id: m.id,
+      text: m.memoText,
+      image: m.memoImg ? m.memoImg.split("||").filter(Boolean) : [],
+      createdAt: m.createdAt,
+      updatedAt: m.updatedAt,
+      userId: m.userId,
+      bookId: m.bookId,
+    }));
+    return res.json(normalized);
   } catch (error) {
     console.error("メモ取得エラー:", error);
     return res.status(500).json({ error: "メモの取得に失敗しました" });
